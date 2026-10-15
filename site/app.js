@@ -51,16 +51,29 @@ function drawArt(type,hex,variant){variant=variant||0;const sh=mix(hex,-28),bg=m
  else body=`<path d="M40 284 Q150 252 270 284 Q292 300 270 314 Q150 336 40 314 Q20 300 40 284Z" fill="${hex}"/><path d="M104 276 Q150 196 196 276" fill="none" stroke="${sh}" stroke-width="14" stroke-linecap="round"/><path d="M128 272 Q150 232 172 272" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="5"/>`;
  let vb='0 0 300 400',tr='';if(variant===1)tr=' transform="translate(300,0) scale(-1,1)"';if(variant===2)vb='55 45 190 250';if(variant===3)tr=' transform="rotate(-8 150 200)"';
  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(type)} in colour"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg}"/><stop offset="1" stop-color="${mix(hex,70)}"/></linearGradient></defs><rect x="-50" y="-50" width="400" height="500" fill="url(#${id})"/><g${tr}>${body}</g></svg>`}
-/* ---------- real photos: random clothing photos by keyword (LoremFlickr, Creative Commons Flickr),
-   the drawn picture is used automatically if a photo cannot load. Add ?photos=0 to the address to use drawings, ?photos=1 for photos again. ---------- */
-const PHOTO_WORD={tshirt:'tshirt',shirt:'shirt',jeans:'jeans',dress:'dress',hoodie:'hoodie',sneaker:'sneakers',sandal:'sandals'};
-let USE_PHOTOS=true;
+/* ---------- real product photos, loaded live from the free DummyJSON demo shop (test data made for practice sites).
+   Types it has no photos for (jeans, hoodies) use random keyword photos (LoremFlickr). A drawn picture is used if a photo cannot load.
+   Add ?photos=0 to the address to use drawings only, ?photos=1 for photos again. ---------- */
+const SHOP_CAT={shirt:'mens-shirts',tshirt:'tops',dress:'womens-dresses',sneaker:'mens-shoes',sandal:'womens-shoes'};
+const FLICKR_WORD={tshirt:'tshirt',shirt:'shirt',jeans:'jeans',dress:'dress',hoodie:'hoodie',sneaker:'sneakers',sandal:'sandals'};
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const POOL={};let poolReady=false,USE_PHOTOS=true;
 try{const pq=new URLSearchParams(location.search).get('photos');if(pq==='0'||pq==='1')sessionStorage.setItem('sn_photos',pq);if(sessionStorage.getItem('sn_photos')==='0')USE_PHOTOS=false}catch(e){}
 function hash(t){let h=7;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h}
+function flickrUrl(type,hex,v){return 'https://loremflickr.com/480/640/'+(FLICKR_WORD[type]||'clothing')+'?lock='+((hash(type+hex)%900)+1+v*1000)}
+function shopUrl(type,hex,v){const l=POOL[type];return l&&l.length?l[(hash(type+hex)+v*7)%l.length]:null}
 function art(type,hex,variant){variant=variant||0;if(!USE_PHOTOS)return drawArt(type,hex,variant);
- const lock=(hash(type+hex)%900)+1+variant*1000;
- return `<img class="ph" loading="lazy" decoding="async" alt="${esc(type)} photo" src="https://loremflickr.com/480/640/${PHOTO_WORD[type]||'clothing'}?lock=${lock}" data-type="${type}" data-hex="${hex}" data-v="${variant}">`}
-document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.classList.contains('ph')){const d=document.createElement('div');d.innerHTML=drawArt(t.dataset.type,t.dataset.hex,+t.dataset.v||0);t.replaceWith(d.firstChild)}},true);
+ const waiting=!poolReady&&!!SHOP_CAT[type],shop=waiting?null:shopUrl(type,hex,variant),url=waiting?BLANK:(shop||flickrUrl(type,hex,variant));
+ return `<img class="ph${shop?' cut':''}" loading="lazy" decoding="async" alt="${esc(type)} photo" src="${url}"${waiting?' data-wait="1"':''} data-type="${type}" data-hex="${hex}" data-v="${variant}">`}
+function hydrate(){$$('img.ph[data-wait]').forEach(i=>{const t=i.dataset.type,h=i.dataset.hex,v=+i.dataset.v||0,u=shopUrl(t,h,v);i.removeAttribute('data-wait');i.classList.toggle('cut',!!u);i.src=u||flickrUrl(t,h,v)})}
+async function loadPool(){if(!USE_PHOTOS){poolReady=true;return}
+ try{const c=store.get('pool',null);
+  if(c&&c.p&&Date.now()-c.t<864e5){Object.assign(POOL,c.p)}
+  else{await Promise.race([Promise.all(Object.entries(SHOP_CAT).map(([t,cat])=>fetch('https://dummyjson.com/products/category/'+cat+'?limit=30&select=title,images').then(r=>r.json()).then(j=>{POOL[t]=(j.products||[]).flatMap(p=>p.images||[]).filter(u=>/^https:\/\//.test(u))}).catch(()=>{}))),sleep(4000)]);
+   if(Object.values(POOL).some(l=>l&&l.length))store.set('pool',{t:Date.now(),p:POOL})}}catch(e){}
+ poolReady=true;hydrate()}
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.classList.contains('ph')&&!t.dataset.wait){const d=document.createElement('div');d.innerHTML=drawArt(t.dataset.type,t.dataset.hex,+t.dataset.v||0);t.replaceWith(d.firstChild)}},true);
+loadPool();
 function pcard(p){const w=Wish.has(p.id);return `<article class="pc" data-id="${p.id}" data-testid="product-card"><div class="img"><a class="imglink" href="product.html?id=${p.id}" aria-label="${esc(p.brand+' '+p.title)}">${art(p.type,p.hex)}</a>${p.oos?'<span class="tag oos">SOLD OUT</span>':p.isNew?'<span class="tag new">NEW</span>':p.off>=50?'<span class="tag">'+p.off+'% OFF</span>':''}<button class="heart" type="button" data-wish="${p.id}" aria-pressed="${w}" aria-label="Add to wishlist">${w?'♥':'♡'}</button><button class="quick" type="button" data-quick="${p.id}">QUICK VIEW</button></div><div class="meta"><div class="brand">${esc(p.brand)}<a class="newtab" href="product.html?id=${p.id}" target="_blank" aria-label="Open in a new tab">↗</a></div><a class="title" style="display:block" href="product.html?id=${p.id}">${esc(p.title)}</a><div class="rate">★ ${p.rating} (${p.reviews})</div><div class="price">${money(p.price)}<s>${money(p.mrp)}</s><b>${p.off}% OFF</b></div></div></article>`}
 const skeletons=n=>Array(n).fill('<div class="sk-card"><div class="img skeleton"></div><div class="l skeleton" style="width:50%"></div><div class="l skeleton" style="width:80%"></div></div>').join('');
 

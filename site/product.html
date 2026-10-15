@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container">
+<div class="crumbs" id="crumbs"><a href="index.html">Home</a> / <a id="crumb-c" href="category.html">Shop</a> / <b id="crumb-p">Product</b></div>
+<div id="notfound" class="empty" hidden><h2>We could not find that product</h2><p style="margin:10px 0 18px">It may have been removed.</p><a class="btn" href="category.html?c=all">BROWSE ALL PRODUCTS</a></div>
+<div class="pdp" id="pdp">
+ <div class="thumbs" id="thumbs"></div>
+ <div class="main-img" id="main-img" aria-label="Product image"></div>
+ <div class="pdp-info">
+  <div class="brandline" id="p-brand"></div><h1 id="p-title"></h1><div class="hint" id="p-rate"></div>
+  <div class="pdp-price"><b id="p-price"></b><s id="p-mrp"></s><span id="p-off"></span></div><div class="hint">Inclusive of all taxes</div>
+  <div class="lbl" style="margin-top:16px">Colour: <span id="p-color"></span></div><div class="swatches" id="p-swatches"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:18px"><div class="lbl">Select size</div><button class="btn ghost sm" id="size-chart" type="button">📏 Size chart</button></div>
+  <div class="sizes" id="p-sizes"></div><div class="error" id="size-err" role="alert"></div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:16px"><div class="lbl" style="margin:0">Quantity</div><div class="stepper"><button type="button" id="q-minus" aria-label="Decrease">−</button><input id="qty" value="1" aria-label="Quantity" readonly><button type="button" id="q-plus" aria-label="Increase">+</button></div></div>
+  <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap"><button class="btn accent" id="add-bag" type="button">ADD TO BAG</button><button class="btn" id="buy-now" type="button">BUY NOW</button><button class="btn ghost" id="wish-btn" type="button" data-wish="">♡ WISHLIST</button></div>
+  <div class="card" style="margin-top:20px"><div class="lbl">Check delivery</div><div class="pin"><input class="input" id="pincode" inputmode="numeric" maxlength="6" placeholder="Enter pincode" aria-label="Pincode"><button class="btn ghost" id="pin-btn" type="button">CHECK</button></div><div id="pin-msg" role="status" style="margin-top:8px"></div></div>
+  <div style="margin-top:14px"><button class="btn ghost sm" id="share-btn" type="button">🔗 Copy link</button></div>
+ </div></div>
+<section class="section" id="info-sec"><div class="tabs" role="tablist" id="p-tabs"><button class="tab" role="tab" data-t="details" aria-selected="true" type="button">Details</button><button class="tab" role="tab" data-t="reviews" aria-selected="false" type="button">Reviews</button><button class="tab" role="tab" data-t="delivery" aria-selected="false" type="button">Delivery &amp; returns</button></div>
+ <div id="t-details"></div><div id="t-reviews" hidden><div id="review-list"></div><div style="margin-top:14px"><button class="btn ghost" id="more-reviews" type="button">SHOW MORE REVIEWS</button></div></div>
+ <div id="t-delivery" hidden><ul style="margin-left:18px;line-height:2"><li>Free delivery on orders above ₹999.</li><li>Standard delivery in 3 to 5 days, express in 1 to 2 days.</li><li>15-day easy returns. Items must be unused with tags.</li><li>Refunds reach you in 3 to 5 working days.</li></ul></div></section>
+<section class="section" id="similar-sec"><div class="section-h"><h2>You may also like</h2></div><div class="grid g4" id="similar"></div></section>
+</div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,byId,art,PRODUCTS,COLORS,money,esc,pcard,Cart,Wish,toast,setBusy,CAT_LABEL}=SN;
+const id=new URLSearchParams(location.search).get('id'),p=byId(id);
+if(!p){$('#pdp').hidden=true;$('#info-sec').hidden=true;$('#similar-sec').hidden=true;$('#notfound').hidden=false;document.title='Product not found | StyleNest';return}
+let size=null,hex=p.hex,cname=p.color,variant=0,qty=1;
+document.title=p.brand+' '+p.title+' | StyleNest';$('#crumb-c').textContent=CAT_LABEL[p.cat];$('#crumb-c').href='category.html?c='+p.cat;$('#crumb-p').textContent=p.title;
+$('#p-brand').textContent=p.brand;$('#p-title').textContent=p.title;$('#p-rate').textContent='★ '+p.rating+' | '+p.reviews+' ratings'+(p.oos?' | SOLD OUT':'');
+$('#p-price').textContent=money(p.price);$('#p-mrp').textContent=money(p.mrp);$('#p-off').textContent=p.off+'% OFF';$('#wish-btn').dataset.wish=p.id;
+function paint(){$('#main-img').innerHTML=art(p.type,hex,variant);$('#thumbs').innerHTML=[0,1,2,3].map(v=>'<button class="thumb" type="button" data-v="'+v+'" aria-pressed="'+(v===variant)+'" aria-label="Image '+(v+1)+'">'+art(p.type,hex,v)+'</button>').join('');$('#p-color').textContent=cname}
+$('#thumbs').addEventListener('click',e=>{const b=e.target.closest('.thumb');if(b){variant=+b.dataset.v;paint()}});
+$('#main-img').addEventListener('mouseenter',()=>$('#main-img').classList.add('zoom'));$('#main-img').addEventListener('mouseleave',()=>$('#main-img').classList.remove('zoom'));
+$('#p-swatches').innerHTML=COLORS.slice(0,8).map(c=>'<button class="sw" type="button" data-n="'+c[0]+'" data-h="'+c[1]+'" aria-label="'+c[0]+'" aria-pressed="'+(c[0]===p.color)+'" style="background:'+c[1]+'" title="'+c[0]+'"></button>').join('');
+if(!COLORS.slice(0,8).some(c=>c[0]===p.color))$('#p-swatches').insertAdjacentHTML('afterbegin','<button class="sw" type="button" data-n="'+p.color+'" data-h="'+p.hex+'" aria-label="'+p.color+'" aria-pressed="true" style="background:'+p.hex+'" title="'+p.color+'"></button>');
+$('#p-swatches').addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;hex=b.dataset.h;cname=b.dataset.n;$$('#p-swatches .sw').forEach(x=>x.setAttribute('aria-pressed',x===b));paint()});
+$('#p-sizes').innerHTML=p.sizes.map(s=>'<button class="size" type="button" data-s="'+s.s+'" aria-pressed="false" '+(s.ok&&!p.oos?'':'disabled')+'>'+s.s+'</button>').join('');
+$('#p-sizes').addEventListener('click',e=>{const b=e.target.closest('.size');if(!b||b.disabled)return;size=b.dataset.s;$$('#p-sizes .size').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#size-err').textContent=''});
+$('#q-minus').addEventListener('click',()=>{qty=Math.max(1,qty-1);$('#qty').value=qty});$('#q-plus').addEventListener('click',()=>{qty=Math.min(10,qty+1);$('#qty').value=qty});
+function need(){if(p.oos){toast('This item is sold out');return false}if(!size){$('#size-err').textContent='Please select a size.';toast('Please select a size');return false}return true}
+$('#add-bag').addEventListener('click',async e=>{if(!need())return;const b=e.currentTarget;setBusy(b,true,'Adding...');await sleep(800);setBusy(b,false);Cart.add(p.id,size,qty);toast('Added to bag','success',['View bag','bag.html'])});
+$('#buy-now').addEventListener('click',async e=>{if(!need())return;const b=e.currentTarget;setBusy(b,true,'Please wait...');await sleep(800);Cart.add(p.id,size,qty);location.href='bag.html'});
+const w=Wish.has(p.id);$('#wish-btn').textContent=(w?'♥':'♡')+' WISHLIST';document.addEventListener('click',e=>{if(e.target.closest('#wish-btn'))setTimeout(()=>{$('#wish-btn').textContent=(Wish.has(p.id)?'♥':'♡')+' WISHLIST'},0)});
+$('#size-chart').addEventListener('click',()=>{window.open('sizechart.html','sizechart','width=540,height=640')});
+$('#share-btn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href)}catch(e){}toast('Link copied','success')});
+$('#pin-btn').addEventListener('click',async e=>{const v=$('#pincode').value.trim(),m=$('#pin-msg');m.className='';if(!/^\d{6}$/.test(v)){m.className='error';m.textContent='Enter a valid 6-digit pincode.';return}const b=e.currentTarget;setBusy(b,true,'Checking...');m.textContent='';await sleep(1000);setBusy(b,false);
+ if(v[0]==='0'){m.className='error';m.textContent='Sorry, we do not deliver to '+v+' yet.';return}const d=new Date(Date.now()+(3+(+v[5]%3))*864e5);m.className='ok';m.textContent='Delivery by '+d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})+'. Cash on delivery available.'});
+$$('#p-tabs .tab').forEach(t=>t.addEventListener('click',()=>{$$('#p-tabs .tab').forEach(x=>x.setAttribute('aria-selected',x===t));['details','reviews','delivery'].forEach(k=>$('#t-'+k).hidden=k!==t.dataset.t)}));
+$('#t-details').innerHTML='<ul style="margin-left:18px;line-height:2"><li>Brand: '+esc(p.brand)+'</li><li>Colour: '+esc(p.color)+'</li><li>Material: 100% cotton blend</li><li>Care: Machine wash cold, do not bleach</li><li>Product code: '+p.id+'</li></ul>';
+const NAMES=['Aarav','Diya','Kabir','Meera','Rohan','Sana','Vikram','Isha','Neel','Tara','Arjun','Priya'],TEXT=['Great fit and fabric. Worth the price.','Colour is exactly as shown. Delivery was quick.','Good quality but runs slightly small.','Very comfortable for everyday use.','Stitching could be better, otherwise fine.','Loved it! Will buy again.'];
+const REV=Array.from({length:12},(_,i)=>({n:NAMES[(+p.id.slice(2)+i)%12],r:3+((+p.id.slice(2)+i)%3),t:TEXT[(+p.id.slice(2)+i*2)%6]}));let rs=0;
+function revs(n){REV.slice(rs,rs+n).forEach(r=>$('#review-list').insertAdjacentHTML('beforeend','<div class="review" data-testid="review"><div class="stars">'+'★'.repeat(r.r)+'☆'.repeat(5-r.r)+'</div><b>'+r.n+'</b><div>'+r.t+'</div></div>'));rs+=n;$('#more-reviews').hidden=rs>=REV.length}
+revs(4);$('#more-reviews').addEventListener('click',async e=>{const b=e.currentTarget;setBusy(b,true,'Loading...');await sleep(1000);setBusy(b,false);revs(4)});
+$('#similar').innerHTML=PRODUCTS.filter(x=>x.id!==p.id&&(x.type===p.type||x.cat===p.cat)).slice(0,4).map(pcard).join('');
+paint();
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

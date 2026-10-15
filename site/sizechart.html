@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Size Chart | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-bare="1">
+<main style="padding:20px"><div style="max-width:480px;margin:0 auto"><h1 style="font-size:22px;margin-bottom:12px">Size chart</h1>
+<div class="tabs" role="tablist" id="sc-tabs"><button class="tab" role="tab" data-t="men" aria-selected="true" type="button">Men</button><button class="tab" role="tab" data-t="women" aria-selected="false" type="button">Women</button></div>
+<div class="table-wrap"><table id="sc-table"></table></div><p class="hint" style="margin:10px 0">Measurements are in inches. If you are between sizes, choose the larger one.</p><button class="btn block" id="sc-close" type="button">CLOSE WINDOW</button></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const T={men:[['Size','Chest','Waist'],['S','36','30'],['M','38','32'],['L','40','34'],['XL','42','36'],['XXL','44','38']],women:[['Size','Bust','Waist'],['XS','32','26'],['S','34','28'],['M','36','30'],['L','38','32'],['XL','40','34']]};
+const $=s=>document.querySelector(s);function draw(k){$('#sc-table').innerHTML=T[k].map((r,i)=>'<tr>'+r.map(c=>i?'<td>'+c+'</td>':'<th>'+c+'</th>').join('')+'</tr>').join('')}
+$('#sc-tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;document.querySelectorAll('#sc-tabs .tab').forEach(x=>x.setAttribute('aria-selected',x===b));draw(b.dataset.t)});
+$('#sc-close').addEventListener('click',()=>window.close());draw('men');
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

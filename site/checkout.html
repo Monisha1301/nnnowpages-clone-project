@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="page-h"><h1>Checkout</h1></div>
+<div id="co-empty" class="empty" hidden><h2>Your bag is empty</h2><p style="margin:10px 0 16px">Add items before you check out.</p><a class="btn" href="category.html?c=all">CONTINUE SHOPPING</a></div>
+<div id="order-done" class="card" hidden style="text-align:center;padding:40px"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">Order placed!</h2><p>Your order id is <b id="done-id"></b>. We have sent a confirmation to your email.</p><div style="margin-top:18px"><a class="btn accent" id="done-track" href="orders.html">TRACK ORDER</a> <a class="btn ghost" id="done-shop" href="index.html">CONTINUE SHOPPING</a></div></div>
+<div class="bag-layout" id="co-wrap"><section>
+ <div class="steps" id="steps"><div class="step on" data-s="1">1. Address</div><div class="step" data-s="2">2. Delivery</div><div class="step" data-s="3">3. Payment</div></div>
+ <div class="card" id="step-1"><h3 style="margin-bottom:12px">Delivery address</h3>
+  <div class="row"><div class="field"><label for="a-name">Full name</label><input class="input" id="a-name"></div><div class="field"><label for="a-phone">Mobile number</label><input class="input" id="a-phone" inputmode="numeric" maxlength="10"></div></div>
+  <div class="row"><div class="field"><label for="a-pin">Pincode</label><input class="input" id="a-pin" inputmode="numeric" maxlength="6"><div class="hint" id="a-pin-st" role="status"></div></div><div class="field"><label for="a-line">Address</label><input class="input" id="a-line" placeholder="House no, street, area"></div></div>
+  <div class="row"><div class="field"><label for="a-state">State</label><select class="input" id="a-state"><option value="">Select state</option></select></div><div class="field"><label for="a-city">City</label><select class="input" id="a-city" disabled><option value="">Select state first</option></select></div></div>
+  <div class="field"><span class="lbl">Address type</span><div style="display:flex;gap:18px"><label class="check"><input type="radio" name="atype" value="Home" checked> Home</label><label class="check"><input type="radio" name="atype" value="Work"> Work</label></div></div>
+  <label class="check" style="margin-bottom:14px"><input type="checkbox" id="a-default"> Make this my default address</label>
+  <div class="error" id="a-err" role="alert"></div><button class="btn accent" id="to-2" type="button">CONTINUE</button></div>
+ <div class="card" id="step-2" hidden><h3 style="margin-bottom:12px">Delivery option</h3>
+  <label class="pay-tile"><input type="radio" name="ship" id="ship-std" value="std" checked> <div><b>Standard delivery</b><div class="hint">3 to 5 days | Free over ₹999</div></div></label>
+  <label class="pay-tile"><input type="radio" name="ship" id="ship-exp" value="exp"> <div><b>Express delivery</b><div class="hint">1 to 2 days | + ₹99</div></div></label>
+  <div style="display:flex;gap:10px;margin-top:10px"><button class="btn ghost" id="back-1" type="button">BACK</button><button class="btn accent" id="to-3" type="button">CONTINUE</button></div></div>
+ <div class="card" id="step-3" hidden><h3 style="margin-bottom:12px">Payment</h3>
+  <label class="pay-tile"><input type="radio" name="pay" id="pay-upi" value="upi" checked> <b>UPI</b></label><div id="p-upi" class="field" style="margin:0 0 12px 28px"><label for="upi-id">UPI id</label><div class="pin"><input class="input" id="upi-id" placeholder="name@bank"><button class="btn ghost" id="upi-verify" type="button">VERIFY</button></div><div id="upi-msg" role="status"></div></div>
+  <label class="pay-tile"><input type="radio" name="pay" id="pay-card" value="card"> <b>Credit / Debit card</b></label><div id="p-card" hidden style="margin:0 0 12px 28px"><div class="field"><label for="c-no">Card number</label><input class="input" id="c-no" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19"></div><div class="row"><div class="field"><label for="c-exp">Expiry (MM/YY)</label><input class="input" id="c-exp" placeholder="MM/YY" maxlength="5"></div><div class="field"><label for="c-cvv">CVV</label><input class="input" id="c-cvv" type="password" inputmode="numeric" maxlength="3"></div></div></div>
+  <label class="pay-tile"><input type="radio" name="pay" id="pay-cod" value="cod"> <div><b>Cash on delivery</b><div class="hint">+ ₹40 handling fee</div></div></label>
+  <div class="error" id="pay-err" role="alert"></div>
+  <div style="display:flex;gap:10px;margin-top:10px"><button class="btn ghost" id="back-2" type="button">BACK</button><button class="btn accent" id="place" type="button">PLACE ORDER</button></div></div>
+</section>
+<aside class="card" id="co-sum"><h3 style="margin-bottom:8px">Order summary</h3><div id="co-items"></div><div class="sum-row"><span>Items total</span><span id="c-sub"></span></div><div class="sum-row"><span>Coupon</span><span id="c-cd" style="color:var(--green)"></span></div><div class="sum-row"><span>Delivery</span><span id="c-ship"></span></div><div class="sum-row" id="c-cod-row" hidden><span>COD fee</span><span>₹40</span></div><div class="sum-row total"><span>To pay</span><span id="c-total"></span></div></aside></div></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,byId,money,esc,Cart,Orders,Auth,toast,setBusy,fieldErr,store,pricing,requireLogin}=SN;
+if(!Cart.items().length){$('#co-wrap').hidden=true;$('#co-empty').hidden=false;return}
+if(!requireLogin('Log in to check out')){}
+const STATES={'Tamil Nadu':['Chennai','Coimbatore','Madurai'],'Karnataka':['Bengaluru','Mysuru'],'Maharashtra':['Mumbai','Pune'],'Delhi':['New Delhi']},BYPIN={'6':'Tamil Nadu','5':'Karnataka','4':'Maharashtra','1':'Delhi'};
+$('#a-state').innerHTML+=Object.keys(STATES).map(s=>'<option>'+s+'</option>').join('');
+const coupon=store.get('coupon','');const opt=()=>({express:$('#ship-exp').checked,cod:$('#pay-cod').checked});
+function sum(){const items=Cart.items(),pr=pricing(items,coupon,opt());$('#co-items').innerHTML=items.map(i=>{const p=byId(i.id);return '<div class="sum-row"><span>'+esc(p.title)+' ×'+i.qty+'</span><span>'+money(p.price*i.qty)+'</span></div>'}).join('');$('#c-sub').textContent=money(pr.sub);$('#c-cd').textContent=pr.cd?'− '+money(pr.cd):'—';$('#c-ship').textContent=pr.ship?money(pr.ship):'FREE';$('#c-cod-row').hidden=!pr.cod;$('#c-total').textContent=money(pr.total);return pr}
+async function loadCities(state,pick){const c=$('#a-city');c.disabled=true;c.innerHTML='<option>Loading cities...</option>';await sleep(800);c.innerHTML='<option value="">Select city</option>'+(STATES[state]||[]).map(x=>'<option>'+x+'</option>').join('');c.disabled=!state;if(pick)c.value=pick}
+$('#a-state').addEventListener('change',e=>{if(e.target.value)loadCities(e.target.value);else{$('#a-city').disabled=true;$('#a-city').innerHTML='<option value="">Select state first</option>'}});
+$('#a-pin').addEventListener('blur',async()=>{const v=$('#a-pin').value.trim(),s=$('#a-pin-st');s.className='hint';s.textContent='';if(!/^\d{6}$/.test(v))return;s.textContent='Looking up pincode...';await sleep(800);const st=BYPIN[v[0]];if(!st){s.className='error';s.textContent='We do not deliver to this pincode yet.';return}s.className='ok';s.textContent='✓ Delivers to '+st;$('#a-state').value=st;await loadCities(st,STATES[st][0])});
+function show(n){[1,2,3].forEach(k=>$('#step-'+k).hidden=k!==n);$$('#steps .step').forEach(s=>{const k=+s.dataset.s;s.classList.toggle('on',k===n);s.classList.toggle('done',k<n)})}
+$('#to-2').addEventListener('click',()=>{const g=id=>$('#'+id);let bad=false;
+ if(g('a-name').value.trim().length<2){fieldErr(g('a-name'),'Enter your full name.');bad=true}else fieldErr(g('a-name'),'');
+ if(!/^[6-9]\d{9}$/.test(g('a-phone').value.trim())){fieldErr(g('a-phone'),'Enter a valid 10-digit mobile number.');bad=true}else fieldErr(g('a-phone'),'');
+ if(!/^\d{6}$/.test(g('a-pin').value.trim())||!BYPIN[g('a-pin').value.trim()[0]]){fieldErr(g('a-pin'),'Enter a valid, serviceable pincode.');bad=true}else fieldErr(g('a-pin'),'');
+ if(g('a-line').value.trim().length<5){fieldErr(g('a-line'),'Enter your address.');bad=true}else fieldErr(g('a-line'),'');
+ $('#a-err').textContent=!g('a-state').value||!g('a-city').value?'Please choose a state and a city.':'';if($('#a-err').textContent)bad=true;if(!bad)show(2)});
+$('#back-1').addEventListener('click',()=>show(1));$('#to-3').addEventListener('click',()=>{show(3);sum()});$('#back-2').addEventListener('click',()=>show(2));
+$$('input[name=ship]').forEach(r=>r.addEventListener('change',sum));
+$$('input[name=pay]').forEach(r=>r.addEventListener('change',()=>{$('#p-upi').hidden=!$('#pay-upi').checked;$('#p-card').hidden=!$('#pay-card').checked;$('#pay-err').textContent='';sum()}));
+$('#upi-verify').addEventListener('click',async e=>{const v=$('#upi-id').value.trim(),m=$('#upi-msg');m.className='';if(!/^[\w.\-]{2,}@[a-z]{2,}$/i.test(v)){m.className='error';m.textContent='Enter a valid UPI id, like name@bank.';return}const b=e.currentTarget;setBusy(b,true,'Verifying...');await sleep(1000);setBusy(b,false);if(v.toLowerCase()==='fail@upi'){m.className='error';m.textContent='We could not verify this UPI id.';return}m.className='ok';m.textContent='✓ Verified'});
+$('#c-no').addEventListener('input',e=>{const d=e.target.value.replace(/\D/g,'').slice(0,16);e.target.value=d.replace(/(.{4})/g,'$1 ').trim()});
+$('#c-exp').addEventListener('input',e=>{let d=e.target.value.replace(/\D/g,'').slice(0,4);if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);e.target.value=d});
+$('#place').addEventListener('click',async e=>{const err=$('#pay-err');err.textContent='';const m=document.querySelector('input[name=pay]:checked').value;
+ if(m==='upi'&&!$('#upi-msg').classList.contains('ok')){err.textContent='Please verify your UPI id first.';return}
+ if(m==='card'){const no=$('#c-no').value.replace(/\s/g,''),ex=$('#c-exp').value,cv=$('#c-cvv').value;if(no.length!==16){err.textContent='Enter a valid 16-digit card number.';return}const mm=+ex.slice(0,2),yy=+ex.slice(3,5);if(!/^\d\d\/\d\d$/.test(ex)||mm<1||mm>12||(2000+yy)*12+mm<new Date().getFullYear()*12+new Date().getMonth()+1){err.textContent='Enter a valid, future expiry date.';return}if(!/^\d{3}$/.test(cv)){err.textContent='Enter the 3-digit CVV.';return}}
+ const b=e.currentTarget;setBusy(b,true,'Processing payment...');await sleep(2500);
+ if(m==='card'&&$('#c-no').value.replace(/\s/g,'')==='4000000000000002'){setBusy(b,false);err.textContent='Payment declined by your bank. Please try another card.';return}
+ const pr=sum(),items=Cart.items(),o=Orders.create(items,pr.total);Cart.clear();store.del('coupon');setBusy(b,false);
+ $('#co-wrap').hidden=true;$('#order-done').hidden=false;$('#done-id').textContent=o.id;$('#done-track').href='orders.html?id='+o.id;toast('Order placed','success')});
+sum();
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Store Locator | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="crumbs"><a href="index.html">Home</a> / <b>Store locator</b></div><div class="page-h"><h1>Find a store near you</h1></div>
+<div class="card" style="margin-top:12px"><div class="row" style="grid-template-columns:1fr 1fr auto;align-items:end"><div class="field" style="margin:0"><label for="st-state">State</label><select class="input" id="st-state"><option value="">Select state</option></select></div><div class="field" style="margin:0"><label for="st-city">City</label><select class="input" id="st-city" disabled><option value="">Select state first</option></select></div><button class="btn accent" id="st-find" type="button">FIND STORES</button></div><div class="error" id="st-err" role="alert"></div></div>
+<div id="st-out" style="margin-top:20px"></div></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,esc,openNamedTab,toast,setBusy}=SN;
+const S={'Tamil Nadu':{Chennai:['T Nagar','Velachery','Anna Nagar'],Coimbatore:['RS Puram','Avinashi Road'],Madurai:['Anna Nagar','Goripalayam']},Karnataka:{Bengaluru:['Indiranagar','Koramangala','Whitefield'],Mysuru:['Devaraja Mohalla']},Maharashtra:{Mumbai:['Bandra West','Andheri East','Powai'],Pune:['Koregaon Park','Kothrud']},Delhi:{'New Delhi':['Connaught Place','Saket','Lajpat Nagar']}};
+$('#st-state').innerHTML+=Object.keys(S).map(s=>'<option>'+s+'</option>').join('');
+$('#st-state').addEventListener('change',async e=>{const c=$('#st-city'),st=e.target.value;c.disabled=true;if(!st){c.innerHTML='<option value="">Select state first</option>';return}c.innerHTML='<option>Loading cities...</option>';await sleep(900);c.innerHTML='<option value="">Select city</option>'+Object.keys(S[st]).map(x=>'<option>'+x+'</option>').join('');c.disabled=false});
+$('#st-find').addEventListener('click',async e=>{const st=$('#st-state').value,ct=$('#st-city').value,er=$('#st-err'),out=$('#st-out');er.textContent='';if(!st||!ct){er.textContent='Please choose a state and a city.';return}
+ const b=e.currentTarget;setBusy(b,true,'Searching...');out.innerHTML='<div class="skeleton" style="height:90px;margin-bottom:12px"></div>'.repeat(2);await sleep(1100);setBusy(b,false);
+ const list=S[st][ct];out.innerHTML='<h3 id="st-title" style="margin-bottom:12px">'+list.length+' stores in '+esc(ct)+'</h3><div class="grid g3">'+list.map((n,i)=>'<div class="card store" data-testid="store"><b>StyleNest '+esc(n)+'</b><div class="hint" style="margin:4px 0 8px">'+(10+i*7)+', Main Road, '+esc(n)+', '+esc(ct)+'</div><div>Open 10:00 AM to 9:30 PM</div><div class="hint">Phone: 044 4000 '+(1200+i*37)+'</div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" type="button" data-dir="'+esc(n)+'">DIRECTIONS</button><a class="btn ghost sm" target="_blank" href="stores.html?store='+encodeURIComponent(n)+'">OPEN IN NEW TAB ↗</a></div></div>').join('')+'</div>'});
+$('#st-out').addEventListener('click',e=>{const b=e.target.closest('[data-dir]');if(b)toast('Directions to StyleNest '+b.dataset.dir+' sent to your phone','success')});
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

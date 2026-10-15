@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Brands | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="crumbs"><a href="index.html">Home</a> / <b>Brands</b></div><div class="page-h"><h1>Shop by brand</h1><p class="hint">Pick a letter or search. Every brand opens its own collection.</p></div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px"><input class="input" id="b-search" type="search" placeholder="Search brands" aria-label="Search brands" style="max-width:260px"><span class="hint" id="b-count" role="status"></span></div>
+<div class="az" id="az" role="group" aria-label="Filter by letter"></div>
+<ul class="brand-list" id="brand-list"></ul><div id="b-none" class="empty" hidden>No brands match.</div></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,BRANDS,PRODUCTS,esc,debounce}=SN;let letter='all';const sorted=[...BRANDS].sort((a,b)=>a.localeCompare(b));
+const letters=[...new Set(sorted.map(b=>b[0].toUpperCase()))];
+$('#az').innerHTML='<button type="button" data-l="all" aria-pressed="true" style="width:auto;padding:0 12px">All</button>'+letters.map(l=>'<button type="button" data-l="'+l+'" aria-pressed="false">'+l+'</button>').join('');
+function draw(){const q=$('#b-search').value.trim().toLowerCase();const l=sorted.filter(b=>(letter==='all'||b[0].toUpperCase()===letter)&&(!q||b.toLowerCase().includes(q)));
+ $('#brand-list').innerHTML=l.map(b=>'<li><a class="brand-link" href="category.html?c=all&brand='+encodeURIComponent(b)+'">'+esc(b)+'<span class="hint">'+PRODUCTS.filter(p=>p.brand===b).length+' items</span></a></li>').join('');$('#b-count').textContent=l.length+' brand'+(l.length===1?'':'s');$('#b-none').hidden=l.length>0}
+$('#az').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;letter=b.dataset.l;$$('#az button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()});
+$('#b-search').addEventListener('input',debounce(draw,300));
+$('#brand-list').innerHTML='<li><div class="skeleton" style="height:48px"></div></li>'.repeat(6);sleep(900).then(draw);
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

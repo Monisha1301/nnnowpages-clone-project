@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help Centre | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="crumbs"><a href="index.html">Home</a> / <b>Help centre</b></div><div class="page-h"><h1>How can we help?</h1></div>
+<div style="max-width:760px"><input class="input" id="faq-search" type="search" placeholder="Search questions" aria-label="Search questions" style="margin:12px 0"><div id="faq-list"></div><p class="hint" id="faq-empty" hidden>No matching questions.</p></div>
+<section class="section" id="returns"><h2>Returns &amp; refunds</h2><p style="margin-top:6px;max-width:760px">You can return unused items with tags within 15 days of delivery. Refunds go back to the original payment method in 3 to 5 working days. Sale items can be exchanged for size.</p></section>
+<section class="section" id="shipping"><h2>Shipping</h2><p style="margin-top:6px;max-width:760px">Free standard delivery on orders above ₹999 (₹79 otherwise). Express delivery is ₹99 extra. Cash on delivery adds a ₹40 fee.</p></section>
+<section class="section" id="terms"><h2>Terms of use</h2><p style="margin-top:6px;max-width:760px">This is a practice shop. Brands, products and prices are made up and no real orders are placed or shipped.</p></section>
+<section class="section" id="privacy"><h2>Privacy policy</h2><p style="margin-top:6px;max-width:760px">Your cart, wishlist and login are saved only in your own browser. Nothing is sent to a server.</p></section>
+<section class="section" id="app"><h2>Get the app</h2><p style="margin-top:6px;max-width:760px">The mobile app is coming soon. Join the newsletter in the footer to hear first.</p></section>
+<section class="section" id="contact"><h2>Contact us</h2><div class="card" style="max-width:640px;margin-top:12px"><form id="ticket-form" novalidate>
+ <div class="row"><div class="field"><label for="t-name">Name</label><input class="input" id="t-name"></div><div class="field"><label for="t-email">Email</label><input class="input" id="t-email" type="email"></div></div>
+ <div class="row"><div class="field"><label for="t-topic">Topic</label><select class="input" id="t-topic"><option value="">Select topic</option><option>Orders &amp; delivery</option><option>Returns &amp; refunds</option><option>Payments</option><option>My account</option></select></div><div class="field"><label for="t-sub">Issue</label><select class="input" id="t-sub" disabled><option value="">Select a topic first</option></select></div></div>
+ <div class="field"><label for="t-msg">Message</label><textarea class="input" id="t-msg" maxlength="300"></textarea><div class="hint" id="t-count">0 / 300</div></div>
+ <div class="field"><label for="t-file">Attach a photo (optional)</label><input class="input" id="t-file" type="file" accept="image/*"><div class="hint" id="t-file-note"></div></div>
+ <div class="error" id="t-err" role="alert"></div><button class="btn accent" id="t-submit" type="submit">SUBMIT</button></form><div id="t-done" hidden class="ok" style="font-size:14px;margin-top:10px"></div></div></section></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,esc,debounce,setBusy,fieldErr,validEmail}=SN;
+const F=[['Where is my order?','Open My Orders and enter your order id to see live tracking.'],['How do I return an item?','Go to My Orders, open the order and choose return within 15 days.'],['When will I get my refund?','Refunds reach you 3 to 5 working days after we receive the item.'],['Can I change my delivery address?','Yes, before the order is shipped. Contact us from this page.'],['Which payment methods do you accept?','UPI, credit and debit cards, and cash on delivery.'],['How do I use a coupon?','Enter the code on the bag page and press Apply. Only one code per order.'],['Do you deliver to my pincode?','Check the pincode box on any product page.'],['How do I find my size?','Open the size chart on any product page.'],['Can I cancel my order?','Orders can be cancelled until they are shipped, from My Orders.'],['Is my payment safe?','Yes, all payments are encrypted. This practice shop never stores real card details.']];
+function faq(q){const l=F.filter(f=>!q||(f[0]+f[1]).toLowerCase().includes(q));$('#faq-list').innerHTML=l.map(f=>'<div class="faq-i"><button class="faq-q" type="button" aria-expanded="false"><span>'+esc(f[0])+'</span><span>+</span></button><div class="faq-a" hidden>'+esc(f[1])+'</div></div>').join('');$('#faq-empty').hidden=l.length>0}
+$('#faq-list').addEventListener('click',e=>{const b=e.target.closest('.faq-q');if(!b)return;const a=b.nextElementSibling,open=!a.hidden;a.hidden=open;b.setAttribute('aria-expanded',!open);b.lastElementChild.textContent=open?'+':'−'});
+$('#faq-search').addEventListener('input',debounce(e=>faq(e.target.value.trim().toLowerCase()),300));faq('');
+const SUB={'Orders & delivery':['Order not delivered','Wrong item received','Change address'],'Returns & refunds':['Start a return','Refund not received','Exchange size'],'Payments':['Payment failed','Charged twice','Coupon not working'],'My account':['Cannot log in','Update details','Delete account']};
+$('#t-topic').addEventListener('change',async e=>{const s=$('#t-sub'),t=e.target.value;s.disabled=true;if(!t){s.innerHTML='<option value="">Select a topic first</option>';return}s.innerHTML='<option>Loading...</option>';await sleep(900);s.innerHTML='<option value="">Select issue</option>'+SUB[t.replace('&amp;','&')].map(x=>'<option>'+x+'</option>').join('');s.disabled=false});
+$('#t-msg').addEventListener('input',e=>{$('#t-count').textContent=e.target.value.length+' / 300'});
+$('#t-file').addEventListener('change',e=>{const f=e.target.files[0];$('#t-file-note').textContent=f?'✓ '+f.name+' selected':''});
+$('#ticket-form').addEventListener('submit',async e=>{e.preventDefault();let bad=false;const g=id=>$('#'+id);
+ if(g('t-name').value.trim().length<2){fieldErr(g('t-name'),'Enter your name.');bad=true}else fieldErr(g('t-name'),'');if(!validEmail(g('t-email').value.trim())){fieldErr(g('t-email'),'Enter a valid email.');bad=true}else fieldErr(g('t-email'),'');
+ $('#t-err').textContent=!g('t-topic').value||!g('t-sub').value?'Please choose a topic and an issue.':g('t-msg').value.trim().length<10?'Please describe the problem (at least 10 characters).':'';if($('#t-err').textContent)bad=true;if(bad)return;
+ const b=g('t-submit');setBusy(b,true,'Submitting...');await sleep(1800);setBusy(b,false);$('#t-done').hidden=false;$('#t-done').textContent='✓ Ticket TKT-'+(40000+Math.floor(Math.random()*9999))+' created. We will reply within 24 hours.';e.target.reset();$('#t-count').textContent='0 / 300'});
+if(location.hash){const t=$(location.hash);if(t)t.scrollIntoView()}
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

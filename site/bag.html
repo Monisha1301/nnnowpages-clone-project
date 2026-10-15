@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Bag | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="page-h"><h1>My Bag <span class="hint" id="bag-n"></span></h1></div>
+<div id="bag-empty" class="empty" hidden><div style="font-size:48px">🛍️</div><h2 style="margin:8px 0">Your bag is empty</h2><p style="margin-bottom:16px">Add something you love and it will show up here.</p><a class="btn" id="empty-shop" href="category.html?c=all">START SHOPPING</a> <a class="btn ghost" id="empty-wish" href="wishlist.html">VIEW WISHLIST</a></div>
+<div class="bag-layout" id="bag-wrap"><section><div class="card" id="ship-bar" style="margin-bottom:12px"></div><div id="bag-list"></div></section>
+<aside class="card" id="summary"><h3 style="margin-bottom:10px">Offers</h3>
+ <div class="pin"><input class="input" id="coupon" placeholder="Enter coupon code" aria-label="Coupon code" style="max-width:none"><button class="btn ghost" id="coupon-btn" type="button">APPLY</button></div>
+ <div id="coupon-msg" role="status" style="margin:6px 0"></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="coupon-chips"><button class="chip" type="button" data-code="STYLE10">STYLE10</button><button class="chip" type="button" data-code="NEST20">NEST20</button><button class="chip" type="button" data-code="FREESHIP">FREESHIP</button></div>
+ <h3 style="margin-bottom:6px">Price details</h3>
+ <div class="sum-row"><span>Total MRP</span><span id="s-mrp"></span></div><div class="sum-row"><span>Discount</span><span id="s-disc" style="color:var(--green)"></span></div><div class="sum-row" id="row-coupon" hidden><span>Coupon</span><span id="s-coupon" style="color:var(--green)"></span></div><div class="sum-row"><span>Delivery</span><span id="s-ship"></span></div><div class="sum-row total"><span>Total</span><span id="s-total"></span></div>
+ <button class="btn accent block" id="place-order" type="button" style="margin-top:14px">PLACE ORDER</button></aside></div></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,byId,art,money,esc,Cart,Wish,toast,setBusy,store,pricing,applyCoupon,Auth,requireLogin}=SN;
+let coupon=store.get('coupon','');
+function render(){const items=Cart.items().filter(i=>byId(i.id));$('#bag-empty').hidden=items.length>0;$('#bag-wrap').hidden=!items.length;$('#bag-n').textContent=items.length?'('+Cart.count()+' items)':'';if(!items.length)return;
+ $('#bag-list').innerHTML=items.map(i=>{const p=byId(i.id);return '<div class="bag-item" data-id="'+i.id+'" data-size="'+i.size+'" data-testid="bag-item"><div class="img">'+art(p.type,p.hex)+'</div><div><div style="font-weight:800">'+esc(p.brand)+'</div><a href="product.html?id='+p.id+'">'+esc(p.title)+'</a><div class="hint">Size: '+i.size+' | Colour: '+esc(p.color)+'</div><div style="margin-top:8px"><div class="stepper"><button type="button" data-act="minus" aria-label="Decrease">−</button><input value="'+i.qty+'" readonly aria-label="Quantity"><button type="button" data-act="plus" aria-label="Increase">+</button></div></div><div style="margin-top:10px;display:flex;gap:8px"><button class="btn ghost sm" type="button" data-act="remove">REMOVE</button><button class="btn ghost sm" type="button" data-act="wish">MOVE TO WISHLIST</button></div></div><div style="text-align:right"><b>'+money(p.price*i.qty)+'</b><div class="hint"><s>'+money(p.mrp*i.qty)+'</s></div><div class="hint" style="color:var(--green)">'+p.off+'% OFF</div></div></div>'}).join('');
+ const pr=pricing(items,coupon);$('#s-mrp').textContent=money(pr.mrp);$('#s-disc').textContent='− '+money(pr.disc);$('#row-coupon').hidden=!pr.cd;$('#s-coupon').textContent='− '+money(pr.cd);$('#s-ship').textContent=pr.ship?money(pr.ship):'FREE';$('#s-total').textContent=money(pr.total);
+ const need=Math.max(0,999-pr.sub);$('#ship-bar').innerHTML=need?'Add items worth <b>'+money(need)+'</b> more for <b>free delivery</b>':'🎉 You have <b>free delivery</b> on this order'}
+$('#bag-list').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const row=b.closest('.bag-item'),id=row.dataset.id,size=row.dataset.size,it=Cart.items().find(i=>i.id===id&&i.size===size);const a=b.dataset.act;
+ if(a==='plus')Cart.setQty(id,size,it.qty+1);if(a==='minus')Cart.setQty(id,size,it.qty-1);
+ if(a==='remove'&&window.confirm('Remove this item from your bag?'))Cart.remove(id,size);
+ if(a==='wish'){if(!Wish.has(id))Wish.toggle(id);Cart.remove(id,size);toast('Moved to wishlist','success')}render()});
+$('#coupon-chips').addEventListener('click',e=>{const c=e.target.closest('[data-code]');if(c)$('#coupon').value=c.dataset.code});
+$('#coupon-btn').addEventListener('click',async e=>{const code=$('#coupon').value.trim(),m=$('#coupon-msg');m.className='';if(!code){m.className='error';m.textContent='Enter a coupon code.';return}const b=e.currentTarget;setBusy(b,true,'Checking...');await sleep(1100);setBusy(b,false);
+ const items=Cart.items(),sub=pricing(items,'').sub,r=applyCoupon(code,sub);if(!r.ok){m.className='error';m.textContent=r.msg;return}coupon=code.toUpperCase();store.set('coupon',coupon);m.className='ok';m.textContent=r.msg;render()});
+$('#place-order').addEventListener('click',()=>{if(!Cart.items().length)return;if(!requireLogin('Log in to place your order'))return;location.href='checkout.html'});
+if(coupon){$('#coupon').value=coupon;const r=applyCoupon(coupon,pricing(Cart.items(),'').sub);if(r.ok){$('#coupon-msg').className='ok';$('#coupon-msg').textContent=r.msg}else{coupon='';store.del('coupon')}}
+document.addEventListener('sn:storage',render);render();
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

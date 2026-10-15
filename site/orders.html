@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container"><div class="page-h"><h1>My Orders</h1></div>
+<div class="card" style="margin-bottom:18px"><h3 style="margin-bottom:8px">Track an order</h3><div class="pin"><input class="input" id="track-id" placeholder="Order id, e.g. SN-10458" aria-label="Order id" style="max-width:300px"><button class="btn" id="track-btn" type="button">TRACK</button></div><div class="error" id="track-err" role="alert"></div><div id="track-out" style="margin-top:14px"></div><div class="hint">Try SN-10458, SN-10459 or SN-10462.</div></div>
+<div id="need-login" class="card" hidden style="text-align:center"><p style="margin-bottom:12px">Please log in to see your orders.</p><button class="btn" id="orders-login" type="button" data-open="login-modal">LOG IN</button></div>
+<div id="orders-wrap"><div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"><input class="input" id="o-search" type="search" placeholder="Search by order id" aria-label="Search orders" style="max-width:240px"><select class="input" id="o-status" style="width:auto" aria-label="Status"><option value="all">All statuses</option><option value="4">Delivered</option><option value="3">Out for delivery</option><option value="2">Shipped</option><option value="1">Packed</option><option value="0">Order placed</option><option value="-1">Cancelled</option></select></div>
+<div class="table-wrap"><table><thead><tr><th>Order</th><th class="sortable" id="th-date" data-k="created">Date ↕</th><th>Items</th><th class="sortable" id="th-total" data-k="total">Total ↕</th><th>Status</th><th></th></tr></thead><tbody id="o-body"></tbody></table></div>
+<div class="pager"><span id="o-count"></span><span><button class="btn ghost sm" id="o-prev" type="button">‹ Prev</button> <span id="o-page" style="margin:0 8px"></span> <button class="btn ghost sm" id="o-next" type="button">Next ›</button></span></div></div></div></main>
+<div class="backdrop" id="order-modal" role="dialog" aria-modal="true"><div class="modal wide"><button class="x" type="button" data-close="order-modal" aria-label="Close">✕</button><div id="order-detail"></div></div></div>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,money,esc,Orders,Auth,STAGES,toast,setBusy,store}=SN;
+const label=s=>s<0?'Cancelled':STAGES[s][0],cls=s=>s<0?'red':s===4?'green':'amber';
+function timeline(o){const s=Orders.stage(o);if(s<0)return '<p class="error">This order was cancelled.</p>';return '<ul class="timeline" id="timeline">'+STAGES.map((x,i)=>'<li class="'+(i<s||s===4&&i===4?'done':i===s?'cur':'')+'"><span class="node">'+(i<s||s===4&&i===4?'✓':i+1)+'</span><div><b>'+x[0]+'</b><div class="hint">'+x[1]+'</div></div></li>').join('')+'</ul>'}
+function detail(o){const s=Orders.stage(o);$('#order-detail').innerHTML='<h3>Order '+esc(o.id)+'</h3><p class="sub">Placed on '+new Date(o.created).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})+' | '+money(o.total)+'</p><div class="hint" style="margin-bottom:12px">'+o.items.map(esc).join(', ')+'</div>'+timeline(o)+(s>=0&&s<2?'<button class="btn ghost" id="cancel-order" type="button" style="margin-top:8px">CANCEL ORDER</button>':'');
+ const c=$('#cancel-order');if(c)c.addEventListener('click',()=>{if(!window.confirm('Cancel order '+o.id+'?'))return;const m=Orders.mine();if(m.some(x=>x.id===o.id)){store.set('orders',m.map(x=>x.id===o.id?Object.assign({},x,{cancelled:true}):x))}else{const x=store.get('cancel',[]);x.push(o.id);store.set('cancel',x)}toast('Order cancelled','success');SN.closeModal('order-modal');load()});SN.openModal('order-modal')}
+const all=()=>{const x=store.get('cancel',[]);return Orders.all().map(o=>x.includes(o.id)?Object.assign({},o,{fixed:undefined,cancelled:true}):o)};
+let sortK='created',dir=-1,page=1,PER=5;
+function rows(){const q=$('#o-search').value.trim().toLowerCase(),st=$('#o-status').value;let l=all().filter(o=>(!q||o.id.toLowerCase().includes(q))&&(st==='all'||String(Orders.stage(o))===st));l.sort((a,b)=>(a[sortK]-b[sortK])*dir);return l}
+async function load(first){const b=$('#o-body');b.innerHTML='<tr><td colspan="6"><div class="skeleton" style="height:120px"></div></td></tr>';await sleep(first?1100:600);draw()}
+function draw(){const l=rows(),pages=Math.max(1,Math.ceil(l.length/PER));page=Math.min(page,pages);const v=l.slice((page-1)*PER,page*PER);
+ $('#o-body').innerHTML=v.length?v.map(o=>{const s=Orders.stage(o);return '<tr data-id="'+o.id+'"><td><b>'+esc(o.id)+'</b></td><td>'+new Date(o.created).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+'</td><td>'+esc(o.items.join(', ').slice(0,38))+'</td><td>'+money(o.total)+'</td><td><span class="chip '+cls(s)+'">'+label(s)+'</span></td><td><button class="btn ghost sm" type="button" data-view="'+o.id+'">VIEW</button></td></tr>'}).join(''):'<tr><td colspan="6" style="text-align:center;padding:30px">No orders found.</td></tr>';
+ $('#o-count').textContent=l.length+' order'+(l.length===1?'':'s');$('#o-page').textContent='Page '+page+' of '+pages;$('#o-prev').disabled=page<=1;$('#o-next').disabled=page>=pages}
+$('#o-body').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)detail(all().find(o=>o.id===b.dataset.view))});
+$$('th.sortable').forEach(t=>t.addEventListener('click',()=>{const k=t.dataset.k;dir=sortK===k?-dir:-1;sortK=k;draw()}));
+$('#o-search').addEventListener('input',SN.debounce(()=>{page=1;draw()},300));$('#o-status').addEventListener('change',()=>{page=1;draw()});$('#o-prev').addEventListener('click',()=>{page--;draw()});$('#o-next').addEventListener('click',()=>{page++;draw()});
+$('#track-btn').addEventListener('click',async e=>{const id=$('#track-id').value.trim().toUpperCase(),er=$('#track-err'),out=$('#track-out');er.textContent='';out.innerHTML='';if(!/^SN-\d{5}$/.test(id)){er.textContent='Enter an order id like SN-10458.';return}
+ const b=e.currentTarget;setBusy(b,true,'Tracking...');out.innerHTML='<div class="skeleton" style="height:90px"></div>';await sleep(1500);setBusy(b,false);const o=all().find(x=>x.id===id);if(!o){out.innerHTML='';er.textContent='We could not find an order with id '+id+'.';return}out.innerHTML='<b>'+esc(o.id)+'</b> | '+o.items.map(esc).join(', ')+timeline(o)});
+function gate(){const u=Auth.user();$('#need-login').hidden=!!u;$('#orders-wrap').hidden=!u;if(u)load(true)}
+document.addEventListener('sn:auth',gate);gate();
+const want=new URLSearchParams(location.search).get('id');if(want){$('#track-id').value=want}
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

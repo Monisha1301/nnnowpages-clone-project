@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StyleNest | Fashion for Men, Women & Kids</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container">
+<section class="hero" id="hero" aria-roledescription="carousel" aria-label="Offers">
+ <div class="slide on" id="slide-0" style="background:linear-gradient(120deg,#111827,#7f1d1d)"><div><h1>The Big Style Sale</h1><p>Up to 60% off on hoodies, jeans and more. Limited time only.</p><a class="btn accent" id="hero-sale" href="category.html?c=sale">SHOP THE SALE</a></div><div class="art" data-art="hoodie" data-hex="#b91c1c"></div></div>
+ <div class="slide" id="slide-1" style="background:linear-gradient(120deg,#0f766e,#064e3b)"><div><h1>New Season Arrivals</h1><p>Fresh dresses, shirts and tees for every day.</p><a class="btn accent" id="hero-new" href="category.html?c=new">SEE WHAT'S NEW</a></div><div class="art" data-art="dress" data-hex="#f59e0b"></div></div>
+ <div class="slide" id="slide-2" style="background:linear-gradient(120deg,#1e3a5f,#111827)"><div><h1>Sneaker Week</h1><p>Running, canvas and high tops starting at just ₹499.</p><a class="btn accent" id="hero-shoes" href="category.html?c=footwear">SHOP FOOTWEAR</a></div><div class="art" data-art="sneaker" data-hex="#38a3d6"></div></div>
+ <button class="hero-arrow l" id="hero-prev" type="button" aria-label="Previous slide">‹</button><button class="hero-arrow r" id="hero-next" type="button" aria-label="Next slide">›</button>
+ <div class="hero-dots" id="hero-dots"></div>
+</section>
+<section class="section"><div class="section-h"><h2>Shop by category</h2><span class="hint">Each category opens in its own tab</span></div>
+ <div class="tiles" id="tiles">
+  <a class="tile" id="tile-men" href="category.html?c=men" data-tab="men" style="background:#1e3a5f"><div class="art" data-art="shirt" data-hex="#38a3d6"></div><div><h3>Men</h3><span>Shirts, tees, jeans</span></div></a>
+  <a class="tile" id="tile-women" href="category.html?c=women" data-tab="women" style="background:#7f1d1d"><div class="art" data-art="dress" data-hex="#e11d48"></div><div><h3>Women</h3><span>Dresses, tops, denim</span></div></a>
+  <a class="tile" id="tile-kids" href="category.html?c=kids" data-tab="kids" style="background:#0f766e"><div class="art" data-art="tshirt" data-hex="#d9a521"></div><div><h3>Kids</h3><span>Play-ready styles</span></div></a>
+  <a class="tile" id="tile-footwear" href="category.html?c=footwear" data-tab="footwear" style="background:#4338ca"><div class="art" data-art="sneaker" data-hex="#e5e7eb"></div><div><h3>Footwear</h3><span>Sneakers and sandals</span></div></a>
+ </div></section>
+<section class="section"><div class="section-h"><h2>Trending now</h2><a href="category.html?c=all" id="trend-all">VIEW ALL →</a></div>
+ <div class="tabs" role="tablist" id="trend-tabs"><button class="tab" role="tab" type="button" data-c="men" aria-selected="true">Men</button><button class="tab" role="tab" type="button" data-c="women" aria-selected="false">Women</button><button class="tab" role="tab" type="button" data-c="kids" aria-selected="false">Kids</button><button class="tab" role="tab" type="button" data-c="footwear" aria-selected="false">Footwear</button></div>
+ <div class="grid g4" id="trend-grid" aria-live="polite"></div></section>
+<section class="section"><div class="section-h"><h2>Shop by brand</h2><a href="brands.html" id="brands-all">ALL BRANDS →</a></div><div class="brand-strip" id="brand-strip"></div></section>
+<section class="section"><div class="section-h"><h2>New arrivals</h2><a href="category.html?c=new" id="new-all">VIEW ALL →</a></div><div class="grid g4" id="new-grid"></div></section>
+<section class="section"><div class="grid g4" style="gap:14px">
+ <div class="card"><b>🚚 Free delivery</b><div class="hint">On orders above ₹999</div></div><div class="card"><b>↩️ 15-day returns</b><div class="hint">Easy and hassle free</div></div><div class="card"><b>🔒 Secure payments</b><div class="hint">UPI, cards and COD</div></div><div class="card"><b>✅ Genuine products</b><div class="hint">Quality checked</div></div></div></section>
+</div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,PRODUCTS,BRANDS,pcard,skeletons,art,openNamedTab}=SN;
+$$('[data-art]').forEach(e=>{e.innerHTML=art(e.dataset.art,e.dataset.hex);e.firstChild.style.cssText='width:100%;height:100%;background:none'});
+$$('.art svg rect').forEach(r=>r.setAttribute('fill','none'));
+/* hero carousel */
+let cur=0,timer;const slides=$$('.slide');$('#hero-dots').innerHTML=slides.map((_,i)=>'<button type="button" data-i="'+i+'" aria-label="Slide '+(i+1)+'"></button>').join('');
+function go(i){cur=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===cur));$$('#hero-dots button').forEach((b,k)=>b.setAttribute('aria-current',k===cur))}
+function auto(){clearInterval(timer);timer=setInterval(()=>go(cur+1),5000)}
+$('#hero-prev').addEventListener('click',()=>{go(cur-1);auto()});$('#hero-next').addEventListener('click',()=>{go(cur+1);auto()});$('#hero-dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b){go(+b.dataset.i);auto()}});go(0);auto();
+/* category tiles open in a named tab (reused if already open) */
+$('#tiles').addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t)return;e.preventDefault();openNamedTab(t.href,'sn:'+t.dataset.tab)});
+/* trending tabs */
+async function trend(c,first){const g=$('#trend-grid');g.innerHTML=skeletons(4);await sleep(first?900:600);const list=PRODUCTS.filter(p=>p.cat===c&&!p.oos).slice(0,8);g.innerHTML=list.map(pcard).join('')}
+$('#trend-tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;$$('#trend-tabs .tab').forEach(x=>x.setAttribute('aria-selected',x===b));trend(b.dataset.c)});
+trend('men',true);
+$('#brand-strip').innerHTML=BRANDS.slice(0,14).map(b=>'<a class="brand-pill" href="category.html?c=all&brand='+encodeURIComponent(b)+'">'+SN.esc(b)+'</a>').join('');
+$('#new-grid').innerHTML=skeletons(4);sleep(1100).then(()=>{$('#new-grid').innerHTML=PRODUCTS.filter(p=>p.isNew&&!p.oos).slice(0,8).map(pcard).join('')});
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

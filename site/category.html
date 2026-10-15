@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop | StyleNest</title>
+<meta name="description" content="StyleNest - fashion for men, women and kids. A practice shop with made-up brands and products.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e11d48'/><text x='50' y='68' font-size='58' font-weight='800' text-anchor='middle' fill='white' font-family='Arial'>S</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main><div class="container">
+<div class="crumbs" id="crumbs"><a href="index.html">Home</a> / <b id="crumb-cat">All Products</b></div>
+<div class="layout">
+<aside class="filters" aria-label="Filters"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Filter by</h3><button class="btn ghost sm" id="clear-all" type="button">Clear all</button></div>
+ <details open id="fd-type"><summary>Type</summary><div class="opts" id="f-type"></div></details>
+ <details open id="fd-brand"><summary>Brand</summary><div class="opts" id="f-brand"></div></details>
+ <details open id="fd-size"><summary>Size</summary><div class="opts"><div class="sizes" id="f-size"></div></div></details>
+ <details id="fd-color"><summary>Colour</summary><div class="opts"><div class="swatches" id="f-color"></div></div></details>
+ <details open id="fd-price"><summary>Price</summary><div class="opts"><input type="range" id="f-price" min="300" max="3000" step="100" value="3000" aria-label="Maximum price"><div class="hint" id="f-price-val">Up to ₹3,000</div></div></details>
+ <details id="fd-disc"><summary>Discount</summary><div class="opts" id="f-disc"><label class="check"><input type="radio" name="disc" value="0" checked> Any</label><label class="check"><input type="radio" name="disc" value="30"> 30% and above</label><label class="check"><input type="radio" name="disc" value="40"> 40% and above</label><label class="check"><input type="radio" name="disc" value="50"> 50% and above</label></div></details>
+ <details id="fd-stock"><summary>Availability</summary><div class="opts"><label class="check"><input type="checkbox" id="f-stock"> Hide sold out items</label></div></details>
+</aside>
+<section>
+ <div class="toolbar"><div><h1 id="cat-title">All Products</h1><div class="hint" id="result-count" role="status">&nbsp;</div></div><div><label class="lbl" for="sort" style="display:inline;margin-right:6px">SORT BY</label><select class="input" id="sort" style="width:auto;display:inline-block"><option value="popular">Popularity</option><option value="low">Price: Low to High</option><option value="high">Price: High to Low</option><option value="disc">Discount</option><option value="rating">Customer rating</option><option value="new">Newest first</option></select></div></div>
+ <div class="applied" id="applied"></div>
+ <div class="grid g3" id="grid" aria-live="polite"></div>
+ <div style="text-align:center;margin-top:28px"><div class="hint" id="shown-count" style="margin-bottom:10px"></div><button class="btn ghost" id="load-more" type="button">LOAD MORE</button></div>
+</section></div></div></main>
+<script>
+document.addEventListener('sn:ready',()=>{
+const {$,$$,sleep,PRODUCTS,BRANDS,COLORS,TYPE_LABEL,CAT_LABEL,SIZES,pcard,skeletons,esc,debounce}=SN;
+const P=new URLSearchParams(location.search),cat=P.get('c')||'all',q=(P.get('q')||'').toLowerCase();
+const F={types:new Set(P.get('type')?[P.get('type')]:[]),brands:new Set(P.get('brand')?[P.get('brand')]:[]),sizes:new Set(),colors:new Set(),max:3000,disc:0,hide:false};
+const base=()=>PRODUCTS.filter(p=>cat==='sale'?p.off>=40:cat==='new'?p.isNew:['men','women','kids','footwear'].includes(cat)?p.cat===cat:true).filter(p=>!q||(p.title+' '+p.brand+' '+p.color+' '+p.type+' '+p.cat).toLowerCase().includes(q));
+const B=base();const title=q?'Results for "'+P.get('q')+'"':(CAT_LABEL[cat]||'All Products');
+$('#cat-title').textContent=title;$('#crumb-cat').textContent=title;document.title=title+' | StyleNest';
+const types=[...new Set(B.map(p=>p.type))],brands=[...new Set(B.map(p=>p.brand))].sort(),sizes=[...new Set(B.flatMap(p=>p.sizes.map(s=>s.s)))],colors=[...new Set(B.map(p=>p.color))];
+$('#f-type').innerHTML=types.map(t=>'<label class="check"><input type="checkbox" data-k="types" value="'+t+'"'+(F.types.has(t)?' checked':'')+'> '+TYPE_LABEL[t]+' <span class="hint">('+B.filter(p=>p.type===t).length+')</span></label>').join('');
+$('#f-brand').innerHTML=brands.map(b=>'<label class="check"><input type="checkbox" data-k="brands" value="'+esc(b)+'"'+(F.brands.has(b)?' checked':'')+'> '+esc(b)+' <span class="hint">('+B.filter(p=>p.brand===b).length+')</span></label>').join('');
+$('#f-size').innerHTML=sizes.map(s=>'<button class="size" type="button" data-s="'+s+'" aria-pressed="false">'+s+'</button>').join('');
+$('#f-color').innerHTML=colors.map(c=>{const h=COLORS.find(x=>x[0]===c)[1];return '<button class="sw" type="button" data-c="'+c+'" aria-label="'+c+'" aria-pressed="false" title="'+c+'" style="background:'+h+'"></button>'}).join('');
+const PAGE=12;let shown=0,list=[],busy=false;
+function filtered(){let l=B.filter(p=>(!F.types.size||F.types.has(p.type))&&(!F.brands.size||F.brands.has(p.brand))&&(!F.sizes.size||p.sizes.some(s=>s.ok&&F.sizes.has(s.s)))&&(!F.colors.size||F.colors.has(p.color))&&p.price<=F.max&&p.off>=F.disc&&(!F.hide||!p.oos));
+ const s=$('#sort').value;if(s==='low')l=[...l].sort((a,b)=>a.price-b.price);if(s==='high')l=[...l].sort((a,b)=>b.price-a.price);if(s==='disc')l=[...l].sort((a,b)=>b.off-a.off);if(s==='rating')l=[...l].sort((a,b)=>b.rating-a.rating);if(s==='new')l=[...l].sort((a,b)=>(b.isNew-a.isNew)||b.id.localeCompare(a.id));return l}
+function chips(){const a=[];F.types.forEach(v=>a.push(['types',v,TYPE_LABEL[v]]));F.brands.forEach(v=>a.push(['brands',v,v]));F.sizes.forEach(v=>a.push(['sizes',v,'Size '+v]));F.colors.forEach(v=>a.push(['colors',v,v]));if(F.max<3000)a.push(['max','','Up to ₹'+F.max]);if(F.disc)a.push(['disc','',F.disc+'%+ off']);if(F.hide)a.push(['hide','','In stock only']);
+ $('#applied').innerHTML=a.map(x=>'<button type="button" data-k="'+x[0]+'" data-v="'+esc(x[1])+'">'+esc(x[2])+' ✕</button>').join('')}
+async function render(reset){if(busy)return;busy=true;const g=$('#grid'),more=$('#load-more');
+ if(reset){shown=0;list=filtered();g.innerHTML=skeletons(6);more.disabled=true;$('#result-count').textContent='Loading...';chips();await sleep(800)}else{SN.setBusy(more,true,'Loading...');await sleep(1000)}
+ const next=list.slice(shown,shown+PAGE);if(reset)g.innerHTML='';
+ if(!list.length)g.innerHTML='<div class="empty" id="no-results" style="grid-column:1/-1">No products match your filters.<br><button class="btn ghost sm" id="empty-clear" type="button" style="margin-top:12px">Clear all filters</button></div>';else g.insertAdjacentHTML('beforeend',next.map(pcard).join(''));
+ shown+=next.length;if(!reset)SN.setBusy(more,false);more.disabled=false;more.hidden=shown>=list.length;
+ $('#result-count').textContent=list.length+' product'+(list.length===1?'':'s');$('#shown-count').textContent=list.length?'Showing '+shown+' of '+list.length:'';busy=false}
+const refresh=()=>{busy=false;render(true)};
+$('#f-type').addEventListener('change',e=>{const i=e.target;if(i.dataset.k){i.checked?F.types.add(i.value):F.types.delete(i.value);refresh()}});
+$('#f-brand').addEventListener('change',e=>{const i=e.target;if(i.dataset.k){i.checked?F.brands.add(i.value):F.brands.delete(i.value);refresh()}});
+$('#f-size').addEventListener('click',e=>{const b=e.target.closest('.size');if(!b)return;const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);on?F.sizes.add(b.dataset.s):F.sizes.delete(b.dataset.s);refresh()});
+$('#f-color').addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);on?F.colors.add(b.dataset.c):F.colors.delete(b.dataset.c);refresh()});
+$('#f-price').addEventListener('input',e=>{F.max=+e.target.value;$('#f-price-val').textContent='Up to ₹'+F.max.toLocaleString('en-IN')});$('#f-price').addEventListener('change',e=>{F.max=+e.target.value;$('#f-price-val').textContent='Up to ₹'+F.max.toLocaleString('en-IN');refresh()});
+$('#f-disc').addEventListener('change',e=>{F.disc=+e.target.value;refresh()});$('#f-stock').addEventListener('change',e=>{F.hide=e.target.checked;refresh()});$('#sort').addEventListener('change',refresh);
+function clearAll(){F.types.clear();F.brands.clear();F.sizes.clear();F.colors.clear();F.max=3000;F.disc=0;F.hide=false;$$('#f-type input,#f-brand input,#f-stock').forEach(i=>i.checked=false);$$('#f-size .size,#f-color .sw').forEach(b=>b.setAttribute('aria-pressed','false'));$('#f-price').value=3000;$('#f-price-val').textContent='Up to ₹3,000';$('input[name=disc][value="0"]').checked=true;refresh()}
+$('#clear-all').addEventListener('click',clearAll);document.addEventListener('click',e=>{if(e.target.id==='empty-clear')clearAll()});
+$('#applied').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,v=b.dataset.v;
+ if(k==='types'){F.types.delete(v);$$('#f-type input').forEach(i=>{if(i.value===v)i.checked=false})}if(k==='brands'){F.brands.delete(v);$$('#f-brand input').forEach(i=>{if(i.value===v)i.checked=false})}
+ if(k==='sizes'){F.sizes.delete(v);$$('#f-size .size').forEach(x=>{if(x.dataset.s===v)x.setAttribute('aria-pressed','false')})}if(k==='colors'){F.colors.delete(v);$$('#f-color .sw').forEach(x=>{if(x.dataset.c===v)x.setAttribute('aria-pressed','false')})}
+ if(k==='max'){F.max=3000;$('#f-price').value=3000;$('#f-price-val').textContent='Up to ₹3,000'}if(k==='disc'){F.disc=0;$('input[name=disc][value="0"]').checked=true}if(k==='hide'){F.hide=false;$('#f-stock').checked=false}refresh()});
+$('#load-more').addEventListener('click',()=>render(false));
+render(true);
+});
+</script>
+<script src="app.js"></script>
+</body>
+</html>

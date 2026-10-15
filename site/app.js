@@ -40,7 +40,7 @@ const byId=id=>PRODUCTS.find(p=>p.id===id);
 /* ---------- product pictures drawn in code ---------- */
 function mix(hex,pct){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=pct<0?0:255,p=Math.abs(pct)/100;r=Math.round(r+(t-r)*p);g=Math.round(g+(t-g)*p);b=Math.round(b+(t-b)*p);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}
 let aid=0;
-function art(type,hex,variant){variant=variant||0;const sh=mix(hex,-28),bg=mix(hex,88),id='a'+(++aid);let body='';
+function drawArt(type,hex,variant){variant=variant||0;const sh=mix(hex,-28),bg=mix(hex,88),id='a'+(++aid);let body='';
  const tee='M92 70 L130 52 Q150 72 170 52 L208 70 L255 118 L222 148 L204 128 L204 330 L96 330 L96 128 L78 148 L45 118 Z';
  if(type==='tshirt')body=`<path d="${tee}" fill="${hex}"/><path d="M130 52 Q150 78 170 52" fill="none" stroke="${sh}" stroke-width="6"/><path d="M96 128 L96 330" stroke="${sh}" stroke-opacity=".25" stroke-width="2"/>`;
  else if(type==='shirt')body=`<path d="${tee}" fill="${hex}"/><path d="M130 52 L150 92 L118 76 Z" fill="#fff" opacity=".92"/><path d="M170 52 L150 92 L182 76 Z" fill="#fff" opacity=".92"/><line x1="150" y1="92" x2="150" y2="330" stroke="${sh}" stroke-width="2"/>${[120,165,210,255,300].map(y=>`<circle cx="150" cy="${y}" r="3.5" fill="${sh}"/>`).join('')}<rect x="168" y="140" width="28" height="32" fill="none" stroke="${sh}" stroke-width="2"/>`;
@@ -51,6 +51,16 @@ function art(type,hex,variant){variant=variant||0;const sh=mix(hex,-28),bg=mix(h
  else body=`<path d="M40 284 Q150 252 270 284 Q292 300 270 314 Q150 336 40 314 Q20 300 40 284Z" fill="${hex}"/><path d="M104 276 Q150 196 196 276" fill="none" stroke="${sh}" stroke-width="14" stroke-linecap="round"/><path d="M128 272 Q150 232 172 272" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="5"/>`;
  let vb='0 0 300 400',tr='';if(variant===1)tr=' transform="translate(300,0) scale(-1,1)"';if(variant===2)vb='55 45 190 250';if(variant===3)tr=' transform="rotate(-8 150 200)"';
  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(type)} in colour"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg}"/><stop offset="1" stop-color="${mix(hex,70)}"/></linearGradient></defs><rect x="-50" y="-50" width="400" height="500" fill="url(#${id})"/><g${tr}>${body}</g></svg>`}
+/* ---------- real photos: random clothing photos by keyword (LoremFlickr, Creative Commons Flickr),
+   the drawn picture is used automatically if a photo cannot load. Add ?photos=0 to the address to use drawings, ?photos=1 for photos again. ---------- */
+const PHOTO_WORD={tshirt:'tshirt',shirt:'shirt',jeans:'jeans',dress:'dress',hoodie:'hoodie',sneaker:'sneakers',sandal:'sandals'};
+let USE_PHOTOS=true;
+try{const pq=new URLSearchParams(location.search).get('photos');if(pq==='0'||pq==='1')sessionStorage.setItem('sn_photos',pq);if(sessionStorage.getItem('sn_photos')==='0')USE_PHOTOS=false}catch(e){}
+function hash(t){let h=7;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;return h}
+function art(type,hex,variant){variant=variant||0;if(!USE_PHOTOS)return drawArt(type,hex,variant);
+ const lock=(hash(type+hex)%900)+1+variant*1000;
+ return `<img class="ph" loading="lazy" decoding="async" alt="${esc(type)} photo" src="https://loremflickr.com/480/640/${PHOTO_WORD[type]||'clothing'}?lock=${lock}" data-type="${type}" data-hex="${hex}" data-v="${variant}">`}
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.classList.contains('ph')){const d=document.createElement('div');d.innerHTML=drawArt(t.dataset.type,t.dataset.hex,+t.dataset.v||0);t.replaceWith(d.firstChild)}},true);
 function pcard(p){const w=Wish.has(p.id);return `<article class="pc" data-id="${p.id}" data-testid="product-card"><div class="img"><a class="imglink" href="product.html?id=${p.id}" aria-label="${esc(p.brand+' '+p.title)}">${art(p.type,p.hex)}</a>${p.oos?'<span class="tag oos">SOLD OUT</span>':p.isNew?'<span class="tag new">NEW</span>':p.off>=50?'<span class="tag">'+p.off+'% OFF</span>':''}<button class="heart" type="button" data-wish="${p.id}" aria-pressed="${w}" aria-label="Add to wishlist">${w?'♥':'♡'}</button><button class="quick" type="button" data-quick="${p.id}">QUICK VIEW</button></div><div class="meta"><div class="brand">${esc(p.brand)}<a class="newtab" href="product.html?id=${p.id}" target="_blank" aria-label="Open in a new tab">↗</a></div><a class="title" style="display:block" href="product.html?id=${p.id}">${esc(p.title)}</a><div class="rate">★ ${p.rating} (${p.reviews})</div><div class="price">${money(p.price)}<s>${money(p.mrp)}</s><b>${p.off}% OFF</b></div></div></article>`}
 const skeletons=n=>Array(n).fill('<div class="sk-card"><div class="img skeleton"></div><div class="l skeleton" style="width:50%"></div><div class="l skeleton" style="width:80%"></div></div>').join('');
 
@@ -177,7 +187,7 @@ const LAT={click:3000,nav:3000,tab:3000,type:300,change:3000,load:1500,block:tru
   document.addEventListener('submit',e=>{if(fast||dispatching)return;hold(LAT.click)},true)}
 })();
 
-window.SN={SITE,LAT,$,$$,sleep,money,debounce,esc,store,toast,setBusy,fieldErr,validEmail,openModal,closeModal,openNamedTab,PRODUCTS,BRANDS,COLORS,TYPES,TYPE_LABEL,CAT_LABEL,SIZES,byId,art,pcard,skeletons,Wish,Cart,Orders,Auth,STAGES,COUPONS,applyCoupon,pricing,requireLogin,renderCounts,quickView,searchAll};
+window.SN={SITE,LAT,$,$$,sleep,money,debounce,esc,store,toast,setBusy,fieldErr,validEmail,openModal,closeModal,openNamedTab,PRODUCTS,BRANDS,COLORS,TYPES,TYPE_LABEL,CAT_LABEL,SIZES,byId,art,drawArt,pcard,skeletons,Wish,Cart,Orders,Auth,STAGES,COUPONS,applyCoupon,pricing,requireLogin,renderCounts,quickView,searchAll};
 shell();
 document.addEventListener('DOMContentLoaded',()=>{if(!document.body.hasAttribute('data-bare'))initShell();document.dispatchEvent(new Event('sn:ready'))});
 })();
